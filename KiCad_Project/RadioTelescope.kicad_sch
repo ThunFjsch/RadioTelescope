@@ -4,6 +4,10 @@
 	(generator_version "9.0")
 	(uuid "998035c6-5ae2-4766-96af-da8d24598d10")
 	(paper "A3")
+	(title_block
+		(title "Radio Image Telescope")
+		(rev "1")
+	)
 	(lib_symbols
 		(symbol "Connector:USB_C_Plug_USB2.0"
 			(pin_names
