@@ -1,11 +1,11 @@
-# Radio Image Telescop project
+# Radio Image Telescope project
 
 ## Introduction
 
-The Radio Telescope utilises a Satelite Dish to scan the night sky controlled with an Embedded interface that communicates with a client. The Embedded Interface transmits the information gathered to the client. After the scan is finished and all the information is transmitted, the client creates an image from the received radio frequencies.  
+The Radio Telescope utilises a Satellite Dish to scan the night sky controlled with an Embedded interface that communicates with a client. The Embedded Interface transmits the information gathered to the client. After the scan is finished and all the information is transmitted, the client creates an image from the received radio frequencies.  
 
 ## Telescope Controller
-The enviorment to develop the MCU software ist done via rust.
+The enviroment to develop the MCU software is done via rust.
 Therefor I recommend to setup a rust DE with the dependencies required to run everything.
 [Rust Embedded Handbook](https://docs.rust-embedded.org/book/)
 
@@ -15,7 +15,7 @@ After each sector scan is complete it transmits the information required to the 
 When the scan is complete the Client starts to process the scan data to an image which is saved on the Client Machine.
 
 What the Controller has to manage is the GPS location and the initialisation of the Spherical Coordinate system to be able to find the scan target.
-Motor control and Metometer sensor is used to change the location of the satelite dish. 
+Motor control and Magnetometer sensor is used to change the location of the Satellite dish. 
 As of now I'm not sure how to verify the Homing of the system.
 
 ## Client App:
@@ -25,7 +25,7 @@ The Client app uses Python and requires the PySerial package to establish an com
 
 The user only interacts with the Hardware via the Client terminal app.
 There the Top left and Bottom Right positions are given for the desired scan position.
-After the Scan is complete the Client processes the data received from the Satelite dish to an Black and white, low res Image.
+After the Scan is complete the Client processes the data received from the Satellite dish to an Black and white, low res Image.
 
 ## Planned Components:
 - Magnetometer (HMC5883L) [Documentation](http://https://m.media-amazon.com/images/I/B1fYZAVkZFL.pdf)

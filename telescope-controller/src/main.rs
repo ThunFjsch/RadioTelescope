@@ -1,34 +1,71 @@
+#![allow(clippy::empty_loop)]
 #![deny(unsafe_code)]
 #![no_main]
 #![no_std]
 
-use panic_halt as _; // Panic handler
+use core::fmt::Write;
 use cortex_m_rt::entry;
-use stm32f1xx_hal::{pac, prelude::*};
+use debouncr::{debounce_3, Edge};
+use panic_halt as _;
+use stm32f1xx_hal::{
+    pac::{self},
+    prelude::*,
+    serial::{Config, Serial},
+};
+
+// For Debug error output
+use rtt_target::{rprintln, rtt_init_print};
 
 #[entry]
 fn main() -> ! {
-    // Get access to device peripherals
-    let dp = pac::Peripherals::take().unwrap();
-    
-    // Get access to RCC (Reset and Clock Control)
-    let rcc = dp.RCC.constrain();
-    
-    // Get access to GPIOA (the user LED on Nucleo-F103RB is on PA5)
-    let mut gpioa = dp.GPIOA.split();
-    
-    // Configure PA5 as push-pull output (the built-in LED)
+    rtt_init_print!();
+
+    let peri = pac::Peripherals::take().unwrap();
+    let rcc = peri.RCC.constrain();
+    let mut flash = peri.FLASH.constrain();
+    let mut afio = peri.AFIO.constrain();
+
+    //let mut gpiob = peri.GPIOB.split();
+    let mut gpioa = peri.GPIOA.split();
+    let mut gpioc = peri.GPIOC.split();
+
+    let tx = gpioa.pa2.into_alternate_push_pull(&mut gpioa.crl);
+    let rx = gpioa.pa3;
+
+    let clocks = rcc.cfgr.use_hse(8.MHz()).freeze(&mut flash.acr);
+
+    let mut serial = Serial::new(
+        peri.USART2,
+        (tx, rx),
+        &mut afio.mapr,
+        Config::default().baudrate(115200.bps()),
+        &clocks,
+    );
+
+    let mut std_delay = 70_000_i32;
     let mut led = gpioa.pa5.into_push_pull_output(&mut gpioa.crl);
-    
-    // Get delay provider
-    let cp = cortex_m::Peripherals::take().unwrap();
-    let clocks = rcc.cfgr.freeze(&mut dp.FLASH.constrain().acr);
-    let mut delay = cp.SYST.delay(&clocks);
-    
+    led.set_low();
+    let button = gpioc.pc13.into_pull_up_input(&mut gpioc.crh);
+    let mut value: u8 = 0;
+    let mut debouncer = debounce_3(false);
+
     loop {
-        led.set_high();
-        delay.delay_ms(500_u16);
-        led.set_low();
-        delay.delay_ms(500_u16);
+        for _i in 1..std_delay {
+            if debouncer.update(button.is_low()) == Some(Edge::Falling) {
+                let result = writeln!(serial, "Button Press {:02}\r", value);
+                if result.is_err() {
+                    rprintln!("{:?}\r", result.err())
+                }
+
+                rprintln!("{:?}\r", result);
+                value = value.wrapping_add(1);
+                std_delay = std_delay - 30_000_i32;
+                if std_delay < 10_000 {
+                    std_delay = 70_000_i32;
+                }
+                break;
+            }
+        }
+        led.toggle();
     }
 }
